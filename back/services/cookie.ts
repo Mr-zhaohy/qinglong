@@ -63,7 +63,6 @@ export default class CookieService {
       if (this.cookies == '') {
         return '';
       }
-      console.log(this.cookies);
       let timeStamp = new Date().getTime();
       let url =
         'https://plogin.m.jd.com/cgi-bin/m/tmauthreflogurl?s_token=' +
@@ -153,9 +152,6 @@ export default class CookieService {
       s_pin +
       '; wq_skey=';
     var userCookie = 'pt_key=' + pt_key + ';pt_pin=' + pt_pin + ';';
-    console.log('\n############  登录成功，获取到 Cookie  #############\n\n');
-    console.log('Cookie1="' + userCookie + '"\n');
-    console.log('\n####################################################\n\n');
     return userCookie;
   }
 
@@ -165,12 +161,18 @@ export default class CookieService {
       let ucookie = this.getCookie(res);
       let content = getFileContentByName(config.confFile);
       const regx = /.*Cookie[0-9]{1}\=\"(.+?)\"/g;
-      const lastCookie = oldCookie || (content.match(regx) as any[]).pop();
-      const cookieRegx = /Cookie([0-9]+)\=.+?/.exec(lastCookie);
-      if (cookieRegx) {
-        const num = parseInt(cookieRegx[1]) + 1;
-        const newCookie = `${lastCookie}\nCookie${num}="${ucookie}"`;
-        const result = content.replace(lastCookie, newCookie);
+      if (content.match(regx)) {
+        const lastCookie = oldCookie || (content.match(regx) as any[]).pop();
+        const cookieRegx = /Cookie([0-9]+)\=.+?/.exec(lastCookie);
+        if (cookieRegx) {
+          const num = parseInt(cookieRegx[1]) + 1;
+          const newCookie = `${lastCookie}\nCookie${num}="${ucookie}"`;
+          const result = content.replace(lastCookie, newCookie);
+          fs.writeFileSync(config.confFile, result);
+        }
+      } else {
+        const newCookie = `Cookie1="${ucookie}"`;
+        const result = content.replace(`Cookie1=""`, newCookie);
         fs.writeFileSync(config.confFile, result);
       }
       return { cookie: ucookie };

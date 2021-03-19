@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Descriptions, Result, Avatar, Space, Statistic } from 'antd';
-import { LikeOutlined, UserOutlined } from '@ant-design/icons';
-import ProLayout, {
-  PageContainer,
-  PageLoading,
-  SettingDrawer,
-} from '@ant-design/pro-layout';
+import ProLayout from '@ant-design/pro-layout';
+import {
+  enable as enableDarkMode,
+  disable as disableDarkMode,
+  setFetchMethod,
+} from 'darkreader';
 import defaultProps from './defaultProps';
 import { Link, history } from 'umi';
 import config from '@/utils/config';
@@ -19,11 +18,29 @@ export default function (props: any) {
       history.push('/login');
     }
   }, []);
+
   useEffect(() => {
     if (props.location.pathname === '/') {
       history.push('/cookie');
     }
   }, [props.location.pathname]);
+
+  useEffect(() => {
+    const colorScheme =
+      window.matchMedia('(prefers-color-scheme: dark)').matches && 'dark';
+    let localTheme = localStorage.getItem('qinglong_dark_theme');
+    if (localTheme === 'auto') {
+      localTheme = null;
+    }
+    const theme = localTheme || colorScheme || 'light';
+    setFetchMethod(window.fetch);
+    if (theme === 'dark') {
+      enableDarkMode({ darkSchemeTextColor: '#fff' });
+    } else if (theme === 'light') {
+      disableDarkMode();
+    }
+  }, []);
+
   if (props.location.pathname === '/login') {
     return props.children;
   }
@@ -31,7 +48,7 @@ export default function (props: any) {
     <ProLayout
       selectedKeys={[props.location.pathname]}
       title="控制面板"
-      menuItemRender={(menuItemProps: any, defaultDom) => {
+      menuItemRender={(menuItemProps: any, defaultDom: any) => {
         if (
           menuItemProps.isUrl ||
           !menuItemProps.path ||
@@ -41,11 +58,6 @@ export default function (props: any) {
         }
         return <Link to={menuItemProps.path}>{defaultDom}</Link>;
       }}
-      //   rightContentRender={() => (
-      //       <div>
-      //           <Avatar shape="square" size="small" icon={<UserOutlined />} />
-      //       </div>
-      //   )}
       {...defaultProps}
     >
       {props.children}
